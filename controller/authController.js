@@ -9,16 +9,19 @@ export const register = (req, res) => {
 export const doregister = (req, res) => {
   const { username, email, password } = req.body;
 
-  const user = users.find((e) => e.email === email);
+  const user = users.find((u) => u.email === email);
+
   if (user) {
-    res.send(
+    return res.send(
       "Email is already registered. <a href='/register'>Register Again</a>",
     );
   }
 
   users.push({ username, email, password });
+
   console.log(users);
-  res.redirect("login");
+
+  res.redirect("/login");
 };
 
 export const login = (req, res) => {
@@ -29,16 +32,30 @@ export const dologin = (req, res) => {
   const { email, password } = req.body;
 
   const user = users.find((u) => u.email === email);
+
   if (!user) {
-    res.send("Email does not exist");
+    return res.send("Email does not exist. <a href='/login'>Login</a>");
   }
 
   if (user.password !== password) {
-    res.send("Password is incorrect.");
+    return res.send("Password is incorrect. <a href='/login'>Try Again</a>");
   }
 
-
+  // Format username for display
   user.username = capitalCase(user.username);
 
-  res.render("welcome", { user, title: "Welcome" });
+  // Store logged-in user in session
+  req.session.user = user;
+
+  res.redirect("/welcome");
+};
+
+export const welcome = (req, res) => {
+  if (!req.session.user) {
+    return res.send("Please log in first. <a href='/login'>Login</a>");
+  }
+
+  res.render("welcome", {
+    user: req.session.user,
+  });
 };
